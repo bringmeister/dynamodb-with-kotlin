@@ -19,6 +19,11 @@ Shows how to implement _createdAt_ and _lastModifiedAt_ timestamps.
 
 Shows how to implement a composite key made up of two parts.
 
+### DynamoBee
+
+DynamoBee is a migration tool for DynamoDB, similar to as Liquibase or Flyway.
+This example shows how to setup and migrate a DynamoDB table with it.
+
 ### JSON
 
 Shows how to save a complex object as JSON.

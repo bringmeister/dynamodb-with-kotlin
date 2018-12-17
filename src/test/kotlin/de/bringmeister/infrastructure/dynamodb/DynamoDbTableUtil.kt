@@ -16,39 +16,46 @@ import kotlin.reflect.KClass
 @Service
 class DynamoDbTableUtil {
 
-    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
-
     @Autowired
     private lateinit var amazonDynamoDB: AmazonDynamoDB
 
-    var pt = ProvisionedThroughput(1L, 1L)
-
     fun createTableForEntity(entity: KClass<*>) {
+        createTableForEntity(entity, amazonDynamoDB)
+    }
 
-        val tableRequest = DynamoDBMapper(amazonDynamoDB)
-            .generateCreateTableRequest(entity.java)
-            .withProvisionedThroughput(pt)
+    companion object {
 
-        if (tableRequest.globalSecondaryIndexes != null) {
-            tableRequest.globalSecondaryIndexes.forEach { gsi ->
-                gsi.projection = Projection().withProjectionType(ProjectionType.ALL)
-                gsi.provisionedThroughput = pt
+        private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+        fun createTableForEntity(entity: KClass<*>, amazonDynamoDB: AmazonDynamoDB) {
+
+            var pt = ProvisionedThroughput(1L, 1L)
+
+            val tableRequest = DynamoDBMapper(amazonDynamoDB)
+                .generateCreateTableRequest(entity.java)
+                .withProvisionedThroughput(pt)
+
+            if (tableRequest.globalSecondaryIndexes != null) {
+                tableRequest.globalSecondaryIndexes.forEach { gsi ->
+                    gsi.projection = Projection().withProjectionType(ProjectionType.ALL)
+                    gsi.provisionedThroughput = pt
+                }
             }
-        }
 
-        // We always try to create the table. If it already exists, AWS will return an error. We just
-        // write a log message in this case and ignore the exception.  This is the same behaviour as
-        // the AWS SDK uses internally, for example in:
-        //
-        // com.amazonaws.services.kinesis.leases.impl.LeaseManager#createLeaseTableIfNotExists(...)
+            // We always try to create the table. If it already exists, AWS will return an error. We just
+            // write a log message in this case and ignore the exception.  This is the same behaviour as
+            // the AWS SDK uses internally, for example in:
+            //
+            // com.amazonaws.services.kinesis.leases.impl.LeaseManager#createLeaseTableIfNotExists(...)
 
-        try {
-            DynamoDB(amazonDynamoDB)
-                .createTable(tableRequest)
-                .waitForActive()
-            log.info("Table created! [entity={}]", entity)
-        } catch (e: ResourceInUseException) {
-            log.info("Table already exists - skip creation! [entity={}]", entity)
+            try {
+                DynamoDB(amazonDynamoDB)
+                    .createTable(tableRequest)
+                    .waitForActive()
+                log.info("Table created! [entity={}]", entity)
+            } catch (e: ResourceInUseException) {
+                log.info("Table already exists - skip creation! [entity={}]", entity)
+            }
         }
     }
 }
