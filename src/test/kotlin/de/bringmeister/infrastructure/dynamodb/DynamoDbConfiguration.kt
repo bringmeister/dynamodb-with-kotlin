@@ -27,7 +27,6 @@ class DynamoDbConfiguration {
      */
     @Bean
     fun amazonDynamoDB(@Value("\${aws.dynamodb.endpoint}") amazonDynamoDBEndpoint: String): AmazonDynamoDB {
-
         return AmazonDynamoDBClientBuilder
             .standard()
             .withCredentials(
