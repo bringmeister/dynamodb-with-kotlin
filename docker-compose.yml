@@ -1,0 +1,6 @@
+version: "3.3"
+services:
+  dynamodb:
+    image: richnorth/dynalite:latest
+    ports:
+      - 14568:4567
